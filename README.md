@@ -2,49 +2,45 @@
 
 ### Pre-Configuration
 
-- Install Postgres
-- Create project database
-- Create Role (postgres user) for database
+Install objection
 
-- Install knex + postgres for project
+```sh
+npm install --save objection
+```
 
-  ```sh
-  npm install --save knex pg
-  ```
+(for secondary key migration)
+
+```
+knex migrate:make 20180804155332_create_foreignkey_on_products
+```
 
 
 ### Relevant files/folders
-+ `knexfile.js` : configure knex library with postgres database connection
-
-+ `src/database/migrations` : we create tables/columns and describe the schema
-
-  ```sh
-  knex migrate:make create_products_schema
-  ```
-
-+ `src/database/seeds` : we can create 'seed' data for the database
 
 
-+ `server.js` : configure db connection, and put it on the request object
++ `server.js`
+  - import objection-`Model` + pass knex-db to objection
 
   ```js
-  const knex = require('knex')
-  // ...
+  const {Model} = require('objection')
 
-  const appDb = knex(dbConfigObj.development)
-  app.locals.db = appDb
+  //....
+  Model.knex(appDb)
   ```
 
-+ `/src/routes/apiRouter` : we can make a query to access data from the database and then we send it back as json
-```js
-apiRouter.get('/vendors', (req, res)=>{
++ `src/models/`
+  - we must declare our models. a model is a representation of a table
 
-  // We have access to the knex-db connection on the `req` object
-  //    from when we assigned it to app.locals.db in server.js
-  const db = req.app.locals.db
-  db.select('*').from('vendors')
-    .then((dbRecordsReturned)=>{
-      res.status(200).json(dbRecordsReturned)
++ `src/migrations/20180804155332_create_foreignkey_on_products.js`
+  - if we are going to use models that need to fetch records from related tables, we must generate a migration and create the secondary key on the 'belongs to' table in a migration
+
++ `src/apiRouter.js`
+  - we import our models here and we can use a model-class to execute query and fetch records from related tables
+
+  ```js
+  Vendor.query()
+    .eager('products')
+    .then((recordsWithProducts)=>{
+      res.status(200).json(recordsWithProducts)
     })
-})
-```
+  ```
