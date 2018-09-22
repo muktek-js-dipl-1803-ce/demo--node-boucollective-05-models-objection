@@ -5,6 +5,8 @@ exports.up = function(knex, Promise) {
       .unsigned()
       .references('id')
       .inTable('vendors')
+      .onDelete('cascade')
+      .onUpdate('cascade')
 
     return productsTable
   })
